@@ -33,9 +33,7 @@ function _M.camera_capture_and_send(args)
 		frame.sleep(0.1)
 	end
 
-	show_flash()
 	frame.camera.capture { quality_factor = quality }
-	clear_display()
 	-- TODO can this value be reduced?
 	frame.sleep(0.1)
 
