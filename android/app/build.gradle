@@ -38,7 +38,7 @@ android {
         applicationId = "com.example.frame_vision"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        minSdk = 21 // for flutter_blue_plus
+        minSdk = 26 // 21 for flutter_blue_plus / 26 for tf-lite
         targetSdk = flutter.targetSdkVersion
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName

@@ -11,6 +11,8 @@ dependencies:
     sdk: flutter
   flutter_blue_plus: ^1.32.7
   logging: ^1.2.0
+  image: ^4.2.0
+  tflite_flutter: ^0.10.4
 
 dev_dependencies:
   flutter_test:
@@ -24,3 +26,5 @@ flutter:
     - assets/camera.min.lua
     - assets/data.min.lua
     - assets/frame_app.min.lua
+    - assets/mobilenet_quant.tflite
+    - assets/labels.txt

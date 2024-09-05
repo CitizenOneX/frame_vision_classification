@@ -1,6 +1,6 @@
-# frame_vision
+# Frame Vision - Classification
 
-Foundation for Frame Vision apps. Takes repeated snapshots and feeds into a machine vision pipeline.
+Takes repeated snapshots on Frame camera, runs image classification through a tensorflow-lite model on the host device and prints the highest probability classes next to the image and to the Frame display.
 
 ### Architecture
 ![Architecture](docs/Frame%20App%20Architecture%20-%20Vision.svg)

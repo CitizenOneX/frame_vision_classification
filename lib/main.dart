@@ -7,6 +7,9 @@ import 'image_data_response.dart';
 import 'package:logging/logging.dart';
 import 'camera.dart';
 import 'simple_frame_app.dart';
+import 'package:flutter/services.dart';
+import 'helper/image_classification_helper.dart';
+import 'package:image/image.dart' as image_lib;
 
 void main() => runApp(const MainApp());
 
@@ -20,6 +23,10 @@ class MainApp extends StatefulWidget {
 }
 
 class MainAppState extends State<MainApp> with SimpleFrameAppState {
+
+  // Classification
+  late ImageClassificationHelper _imageClassificationHelper;
+  String _top3 = '';
 
   // the image and metadata to show
   Image? _image;
@@ -39,10 +46,17 @@ class MainAppState extends State<MainApp> with SimpleFrameAppState {
   int _gainLimit = 248;     // 0 <= val <= 248
 
   MainAppState() {
-    Logger.root.level = Level.INFO;
+    Logger.root.level = Level.FINER;
     Logger.root.onRecord.listen((record) {
       debugPrint('${record.level.name}: ${record.time}: ${record.message}');
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _imageClassificationHelper = ImageClassificationHelper();
+    _imageClassificationHelper.initHelper();
   }
 
   @override
@@ -67,22 +81,40 @@ class MainAppState extends State<MainApp> with SimpleFrameAppState {
 
         // received a whole-image Uint8List with jpeg header and footer included
         _stopwatch.stop();
+        _log.fine('Image file size in bytes: ${imageData.length}, elapsedMs: ${_stopwatch.elapsedMilliseconds}');
 
         try {
-          Image im = Image.memory(imageData, gaplessPlayback: true,);
+          // Decode image using package:image/image.dart (https://pub.dev/packages/image)
+          image_lib.Image? im = image_lib.decodeJpg(imageData);
 
-          // add the size and elapsed time to the image metadata widget
-          meta.size = imageData.length;
-          meta.elapsedTimeMs = _stopwatch.elapsedMilliseconds;
+          if (im != null) {
+            // Frame camera is rotated 90 degrees clockwise, so make it upright for image processing
+            im = image_lib.copyRotate(im, angle: 270);
 
-          _log.fine('Image file size in bytes: ${imageData.length}, elapsedMs: ${_stopwatch.elapsedMilliseconds}');
+            // Perform vision processing pipeline
+            // send image to classifier, produce some candidate classes (https://pub.dev/packages/tflite_flutter)
+            Map<String, double> classification = await _imageClassificationHelper.inferenceImage(im);
 
-          setState(() {
-            _image = im;
-            _imageMeta = meta;
-          });
+            // classification map is unordered and can be long, sort it and pick the best 3 here
+            _top3 = (classification.entries.toList()
+                      ..sort((a, b) => a.value.compareTo(b.value),))
+                      .reversed.take(3).toList().fold<String>('', (previousValue, element) => '$previousValue\n${element.key}: ${element.value.toStringAsFixed(2)}');
 
-          // Perform vision processing pipeline
+            _log.fine('Classification result: $_top3');
+
+            // UI display
+            Image imWidget = Image.memory(image_lib.encodeJpg(im), gaplessPlayback: true,);
+
+            // add the size and elapsed time to the image metadata widget
+            meta.size = imageData.length;
+            meta.elapsedTimeMs = _stopwatch.elapsedMilliseconds;
+
+            setState(() {
+              _image = imWidget;
+              _imageMeta = meta;
+            });
+
+          }
 
         } catch (e) {
           _log.severe('Error converting bytes to image: $e');
@@ -104,11 +136,11 @@ class MainAppState extends State<MainApp> with SimpleFrameAppState {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Frame Vision',
+      title: 'Vision - Classification',
       theme: ThemeData.dark(),
       home: Scaffold(
         appBar: AppBar(
-          title: const Text("Frame Vision"),
+          title: const Text("Vision - Classification"),
           actions: [getBatteryWidget()]
         ),
         drawer: Drawer(
@@ -255,15 +287,11 @@ class MainAppState extends State<MainApp> with SimpleFrameAppState {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 children: [
-                  Transform(
-                    alignment: Alignment.center,
-                    // images are rotated 90 degrees clockwise from the Frame
-                    // so reverse that for display
-                    transform: Matrix4.rotationZ(-pi*0.5),
-                    child: _image,
-                  ),
+                  if (_image != null) _image!,
                   const Divider(),
                   if (_imageMeta != null) _imageMeta!,
+                  const Divider(),
+                  Text(_top3),
                 ],
               )
             ),
