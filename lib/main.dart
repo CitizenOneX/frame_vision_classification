@@ -1,15 +1,16 @@
 import 'dart:async';
-import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'image_data_response.dart';
-import 'package:logging/logging.dart';
-import 'camera.dart';
-import 'simple_frame_app.dart';
 import 'package:flutter/services.dart';
-import 'helper/image_classification_helper.dart';
 import 'package:image/image.dart' as image_lib;
+import 'package:logging/logging.dart';
+
+import 'camera.dart';
+import 'helper/image_classification_helper.dart';
+import 'image_data_response.dart';
+import 'simple_frame_app.dart';
+import 'text_msg.dart';
 
 void main() => runApp(const MainApp());
 
@@ -46,7 +47,7 @@ class MainAppState extends State<MainApp> with SimpleFrameAppState {
   int _gainLimit = 248;     // 0 <= val <= 248
 
   MainAppState() {
-    Logger.root.level = Level.FINER;
+    Logger.root.level = Level.INFO;
     Logger.root.onRecord.listen((record) {
       debugPrint('${record.level.name}: ${record.time}: ${record.message}');
     });
@@ -101,6 +102,9 @@ class MainAppState extends State<MainApp> with SimpleFrameAppState {
                       .reversed.take(3).toList().fold<String>('', (previousValue, element) => '$previousValue\n${element.key}: ${element.value.toStringAsFixed(2)}');
 
             _log.fine('Classification result: $_top3');
+
+            // Frame display
+            await frame!.sendDataRaw(TextMsg.pack(_top3));
 
             // UI display
             Image imWidget = Image.memory(image_lib.encodeJpg(im), gaplessPlayback: true,);
