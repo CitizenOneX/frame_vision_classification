@@ -5,12 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as image_lib;
 import 'package:logging/logging.dart';
-import 'package:simple_frame_app/camera_settings.dart';
+import 'package:simple_frame_app/tx/camera_settings.dart';
 import 'package:simple_frame_app/image_data_response.dart';
 import 'package:simple_frame_app/simple_frame_app.dart';
+import 'package:simple_frame_app/tx/text.dart';
 
 import 'helper/image_classification_helper.dart';
-import 'text_msg.dart';
 
 void main() => runApp(const MainApp());
 
@@ -75,7 +75,16 @@ class MainAppState extends State<MainApp> with SimpleFrameAppState {
         // send the lua command to request a photo from the Frame
         _stopwatch.reset();
         _stopwatch.start();
-        await frame!.sendDataRaw(CameraSettingsMsg.pack(_qualityIndex, _autoExpGainTimes, _meteringModeIndex, _exposure, _shutterKp, _shutterLimit, _gainKp, _gainLimit));
+        await frame!.sendMessage(TxCameraSettings(
+          msgCode: 0x0d,
+          qualityIndex: _qualityIndex,
+          autoExpGainTimes: _autoExpGainTimes,
+          meteringModeIndex: _meteringModeIndex,
+          exposure: _exposure,
+          shutterKp: _shutterKp,
+          shutterLimit: _shutterLimit,
+          gainKp: _gainKp,
+          gainLimit: _gainLimit));
 
         // synchronously await the image response
         Uint8List imageData = await imageDataResponse(frame!.dataResponse, _qualityValues[_qualityIndex].toInt()).first;
@@ -104,7 +113,7 @@ class MainAppState extends State<MainApp> with SimpleFrameAppState {
             _log.fine('Classification result: $_top3');
 
             // Frame display
-            await frame!.sendDataRaw(TextMsg.pack(_top3));
+            await frame!.sendMessage(TxPlainText(msgCode: 0x0a, text: _top3));
 
             // UI display
             Image imWidget = Image.memory(image_lib.encodeJpg(im), gaplessPlayback: true,);
