@@ -8,7 +8,7 @@ import 'package:logging/logging.dart';
 import 'package:simple_frame_app/tx/camera_settings.dart';
 import 'package:simple_frame_app/image_data_response.dart';
 import 'package:simple_frame_app/simple_frame_app.dart';
-import 'package:simple_frame_app/tx/text.dart';
+import 'package:simple_frame_app/tx/plain_text.dart';
 
 import 'helper/image_classification_helper.dart';
 
