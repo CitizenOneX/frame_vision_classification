@@ -1,19 +1,15 @@
 local data = require('data.min')
 local battery = require('battery.min')
 local camera = require('camera.min')
+local plain_text = require('plain_text.min')
 
 -- Phone to Frame flags
 CAMERA_SETTINGS_MSG = 0x0d
 TEXT_MSG = 0x0a
 
--- parse the text message from the host
-function parse_text(data)
-	return data
-end
-
 -- register the message parser so it's automatically called when matching data comes in
 data.parsers[CAMERA_SETTINGS_MSG] = camera.parse_camera_settings
-data.parsers[TEXT_MSG] = parse_text
+data.parsers[TEXT_MSG] = plain_text.parse_plain_text
 
 function clear_display()
     frame.display.text(" ", 1, 1)
@@ -54,7 +50,7 @@ function app_loop()
 			end
 			if (data.app_data[TEXT_MSG] ~= nil) then
 				clear_display()
-				print_text(data.app_data[TEXT_MSG])
+				print_text(data.app_data[TEXT_MSG].string)
 			end
 		end
 
