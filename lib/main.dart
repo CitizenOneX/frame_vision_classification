@@ -109,7 +109,7 @@ class MainAppState extends State<MainApp> with SimpleFrameAppState {
             // classification map is unordered and can be long, sort it and pick the best 3 here
             _top3 = (classification.entries.toList()
                       ..sort((a, b) => a.value.compareTo(b.value),))
-                      .reversed.take(3).toList().fold<String>('', (previousValue, element) => '$previousValue\n${element.key}: ${element.value.toStringAsFixed(2)}');
+                      .reversed.take(3).toList().fold<String>('', (previousValue, element) => '$previousValue\n${element.key}: ${element.value.toStringAsFixed(2)}').trim();
 
             _log.fine('Classification result: $_top3');
 
